@@ -17,8 +17,8 @@ select <-dplyr::select
 ```
 
 ```{r, warning=FALSE, message=FALSE}
-train <-read.csv("train.csv")
-test <- read.csv("test.csv")
+train <-read.csv("train.csv", stringsAsFactors = TRUE)
+test <- read.csv("test.csv", stringsAsFactors = TRUE)
 train$set <- "train"
 test$set <- "set"
 data <- dplyr::bind_rows(train,test)
@@ -33,6 +33,7 @@ missingValue <- data %>%
   select(-SalePrice) %>%
   summarise_all(funs( sum(is.na(.)) / n() )) %>%
   gather()
+
 missingValue %>%
   filter(value > 0) %>%
   ggplot(aes(reorder(key,value), value, fill = key)) +
@@ -45,7 +46,7 @@ missingValue %>%
 
 ### 밑에서부터;;;
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 getmode <- function(v) {
    uniqv <- unique(v)
@@ -102,22 +103,44 @@ data$Functional[is.na(data$Functional)] <- getmode(data$Functional)
 data$Utilities[is.na(data$Utilities)] <- getmode(data$Utilities)
 
 ## 6% 미만인 친구들
+
 # MSZoning
 data$MSZoning[is.na(data$MSZoning)] <- getmode(data$MSZoning)
+
 # MasVnrArea
 data$MasVnrArea[is.na(data$MasVnrArea)] <- getmode(data$MasVnrArea)
+
 # MasVnrType
 data$MasVnrType[is.na(data$MasVnrType)] <- getmode(data$MasVnrType)
+
 # BsmtFinType1
 data %>%
   select(BsmtFinType1) %>%
   group_by(BsmtFinType1) %>%
   count()
+
 new_data <- data %>%
   select_if(~ !any(is.na(.))) %>%
-  select(-set, -Id)
+  select(-set, -Id) %>%
+  mutate_if(is.character, factor)
+
+new_data <- new_data %>%
+  select_if(funs( nlevels(.) > 6 | is.numeric(.)))
+
 new_data$BsmtFinType1 <- data$BsmtFinType1
+
+
 train <- new_data[!is.na(new_data$BsmtFinType1),]
 test <- new_data[is.na(new_data$BsmtFinType1),]
 
+svm.fit <- svm(BsmtFinType1 ~., data= train, kernel = "radial", cost = 1, gamma = 0.5)
+
 ```
+
+
+
+
+
+
+
+
