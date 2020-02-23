@@ -378,8 +378,8 @@ library(MASS)
 library(caret)
 library(e1071)
 select &lt;-dplyr::select</code></pre>
-<pre class="r"><code>train &lt;-read.csv(&quot;train.csv&quot;)
-test &lt;- read.csv(&quot;test.csv&quot;)
+<pre class="r"><code>train &lt;-read.csv(&quot;train.csv&quot;, stringsAsFactors = TRUE)
+test &lt;- read.csv(&quot;test.csv&quot;, stringsAsFactors = TRUE)
 train$set &lt;- &quot;train&quot;
 test$set &lt;- &quot;set&quot;
 data &lt;- dplyr::bind_rows(train,test)
@@ -470,42 +470,18 @@ data$Functional[is.na(data$Functional)] &lt;- getmode(data$Functional)
 data$Utilities[is.na(data$Utilities)] &lt;- getmode(data$Utilities)
 
 ## 6% 미만인 친구들
+
 # MSZoning
 data$MSZoning[is.na(data$MSZoning)] &lt;- getmode(data$MSZoning)
+
 # MasVnrArea
 data$MasVnrArea[is.na(data$MasVnrArea)] &lt;- getmode(data$MasVnrArea)
+
 # MasVnrType
 data$MasVnrType[is.na(data$MasVnrType)] &lt;- getmode(data$MasVnrType)
+
 # BsmtFinType1
-data %&gt;%
-  select(BsmtFinType1) %&gt;%
-  group_by(BsmtFinType1) %&gt;%
-  count()</code></pre>
-<pre><code>## Warning: Factor `BsmtFinType1` contains implicit NA, consider using
-## `forcats::fct_explicit_na`
-
-## Warning: Factor `BsmtFinType1` contains implicit NA, consider using
-## `forcats::fct_explicit_na`
-
-## Warning: Factor `BsmtFinType1` contains implicit NA, consider using
-## `forcats::fct_explicit_na`</code></pre>
-<pre><code>## # A tibble: 7 x 2
-## # Groups:   BsmtFinType1 [7]
-##   BsmtFinType1     n
-##   &lt;fct&gt;        &lt;int&gt;
-## 1 ALQ            429
-## 2 BLQ            269
-## 3 GLQ            849
-## 4 LwQ            154
-## 5 Rec            288
-## 6 Unf            851
-## 7 &lt;NA&gt;            79</code></pre>
-<pre class="r"><code>new_data &lt;- data %&gt;%
-  select_if(~ !any(is.na(.))) %&gt;%
-  select(-set, -Id)
-new_data$BsmtFinType1 &lt;- data$BsmtFinType1
-train &lt;- new_data[!is.na(new_data$BsmtFinType1),]
-test &lt;- new_data[is.na(new_data$BsmtFinType1),]</code></pre>
+data$BsmtFinType1[is.na(data$BsmtFinType1)] &lt;- getmode(data$BsmtFinType1)</code></pre>
 </div>
 </div>
 

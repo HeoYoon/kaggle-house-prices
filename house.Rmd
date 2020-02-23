@@ -48,10 +48,7 @@ missingValue %>%
 
 ```{r, warning=FALSE, message=FALSE}
 
-getmode <- function(v) {
-   uniqv <- unique(v)
-   uniqv[which.max(tabulate(match(v, uniqv)))]
-}
+### 흑흑 너무 많다 ㅠㅠㅠ
 
 ## 0.03% 짜리 친구들
 
@@ -114,26 +111,44 @@ data$MasVnrArea[is.na(data$MasVnrArea)] <- getmode(data$MasVnrArea)
 data$MasVnrType[is.na(data$MasVnrType)] <- getmode(data$MasVnrType)
 
 # BsmtFinType1
-data %>%
-  select(BsmtFinType1) %>%
-  group_by(BsmtFinType1) %>%
+data$BsmtFinType1[is.na(data$BsmtFinType1)] <- getmode(data$BsmtFinType1)
+
+# BsmtFinType2
+data$BsmtFinType2[is.na(data$BsmtFinType2)] <- getmode(data$BsmtFinType2)
+
+# BsmtQual
+data$BsmtQual[is.na(data$BsmtQual)] <- getmode(data$BsmtQual)
+
+# BsmtCond
+data$BsmtCond[is.na(data$BsmtCond)] <- getmode(data$BsmtCond)
+
+# BsmtExposure
+data$BsmtExposure[is.na(data$BsmtExposure)] <- getmode(data$BsmtExposure)
+
+# GarageType
+data$GarageType[is.na(data$GarageType)] <- getmode(data$GarageType)
+
+# GarageCond
+data$GarageCond[is.na(data$GarageCond)] <- getmode(data$GarageCond)
+
+# GarageFinish
+data$GarageFinish[is.na(data$GarageFinish)] <- getmode(data$GarageFinish)
+
+# GarageQual
+data$GarageQual[is.na(data$GarageQual)] <- getmode(data$GarageQual)
+
+# GarageYrBlt
+data$GarageYrBlt[is.na(data$GarageYrBlt)] <- getmode(data$GarageYrBlt)
+
+## 16.65% 
+
+# LotFrontage
+data %>% 
+  group_by(LotFrontage) %>%
   count()
 
-new_data <- data %>%
-  select_if(~ !any(is.na(.))) %>%
-  select(-set, -Id) %>%
-  mutate_if(is.character, factor)
+## Linear regression Le's go
 
-new_data <- new_data %>%
-  select_if(funs( nlevels(.) > 6 | is.numeric(.)))
-
-new_data$BsmtFinType1 <- data$BsmtFinType1
-
-
-train <- new_data[!is.na(new_data$BsmtFinType1),]
-test <- new_data[is.na(new_data$BsmtFinType1),]
-
-svm.fit <- svm(BsmtFinType1 ~., data= train, kernel = "radial", cost = 1, gamma = 0.5)
 
 ```
 
