@@ -49,7 +49,7 @@ missingValue %>%
 
 ### 밑에서부터;;;
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE}
 
 
 ### 흑흑 너무 많다 ㅠㅠㅠ
@@ -173,8 +173,7 @@ test_lm <- lm_data[is.na(lm_data$LotFrontage),]
 
 ## Linear regression Le's go
 lm.fit <- lm(LotFrontage ~., data = train_lm)
-step.lm.fit <- stepAIC(lm.fit)
-summary(step.lm.fit)
+step.lm.fit <- stepAIC(lm.fit, direction = "both",trace = FALSE)
 
 test_lm$LotFrontage <- predict(step.lm.fit, test_lm)
 
@@ -234,12 +233,137 @@ p4 <- data %>%
 grid.arrange(p1,p2,p3,p4, nrow = 2)
 ```
 
+## Data manipulation
+
+### change factor to integer
+
+```{r}
+data %>%
+  select_if(is.factor) %>%
+  colnames()
+```
+
+
+```{r}
+data <- data %>%
+  mutate_if(is.character, as.factor)
+
+data <- data %>%
+  mutate(
+    LotShape = case_when(
+    data$LotShape == "IR3" ~ 1,
+    data$LotShape == "IR2" ~ 2,
+    data$LotShape == "IR1" ~ 3,
+    data$LotShape == "Reg" ~ 4),
+    LandContour = case_when(
+      data$LandContour == "Low" ~ 1,
+      data$LandContour == "HLS" ~ 2,
+      data$LandContour == "Bnk" ~ 3,
+      data$LandContour == "Lvl" ~ 4
+    ),
+    ExterQual = case_when(
+      data$ExterQual == "Po" ~ 1,
+      data$ExterQual == "Fa" ~ 2,
+      data$ExterQual == "TA" ~ 3,
+      data$ExterQual == "Gd" ~ 4,
+      data$ExterQual == "Ex" ~ 5
+    ),
+    ExterCond = case_when(
+      data$ExterCond == "Po" ~ 1,
+      data$ExterCond == "Fa" ~ 2,
+      data$ExterCond == "TA" ~ 3,
+      data$ExterCond == "Gd" ~ 4,
+      data$ExterCond == "Ex" ~ 5
+    ),
+    BsmtQual = case_when(
+      data$BsmtQual == "Nothing" ~ 1,
+      data$BsmtQual == "Po" ~ 2,
+      data$BsmtQual == "Fa" ~ 3,
+      data$BsmtQual == "TA" ~ 4,
+      data$BsmtQual == "Gd" ~ 5,
+      data$BsmtQual == "Ex" ~ 6
+    ),
+    BsmtCond = case_when(
+      data$BsmtCond == "Nothing" ~ 1,
+      data$BsmtCond == "Po" ~ 2,
+      data$BsmtCond == "Fa" ~ 3,
+      data$BsmtCond == "TA" ~ 4,
+      data$BsmtCond == "Gd" ~ 5,
+      data$BsmtCond == "Ex" ~ 6
+    ),
+    BsmtExposure = case_when(
+      data$BsmtExposure == "Nothing" ~ 1,
+      data$BsmtExposure == "No" ~ 2,
+      data$BsmtExposure == "Mn" ~ 3,
+      data$BsmtExposure == "Av" ~ 4,
+      data$BsmtExposure == "Gd" ~ 5
+    ),
+    BsmtFinType1 = case_when(
+      data$BsmtFinType1 == "Nothing" ~ 1,
+      data$BsmtFinType1 == "Unf" ~ 2,
+      data$BsmtFinType1 == "LwQ" ~ 3,
+      data$BsmtFinType1 == "Rec" ~ 4,
+      data$BsmtFinType1 == "BLQ" ~ 5,
+      data$BsmtFinType1 == "ALQ" ~ 6,
+      data$BsmtFinType1 == "GLQ" ~ 7
+    ),
+    BsmtFinType2 = case_when(
+      data$BsmtFinType2 == "Nothing" ~ 1,
+      data$BsmtFinType2 == "Unf" ~ 2,
+      data$BsmtFinType2 == "LwQ" ~ 3,
+      data$BsmtFinType2 == "Rec" ~ 4,
+      data$BsmtFinType2 == "BLQ" ~ 5,
+      data$BsmtFinType2 == "ALQ" ~ 6,
+      data$BsmtFinType2 == "GLQ" ~ 7
+    ),
+    HeatingQC = case_when(
+      data$HeatingQC == "Po" ~ 1,
+      data$HeatingQC == "Fa" ~ 2,
+      data$HeatingQC == "TA" ~ 3,
+      data$HeatingQC == "Gd" ~ 4,
+      data$HeatingQC == "Ex" ~ 5
+    ),
+    KitchenQual = case_when(
+      data$KitchenQual == "Po" ~ 1,
+      data$KitchenQual == "Fa" ~ 2,
+      data$KitchenQual == "TA" ~ 3,
+      data$KitchenQual == "Gd" ~ 4,
+      data$KitchenQual == "Ex" ~ 5
+    ),
+    GarageQual = case_when(
+      data$GarageQual == "Nothing" ~ 1,
+      data$GarageQual == "Po" ~ 2,
+      data$GarageQual == "Fa" ~ 3,
+      data$GarageQual == "TA" ~ 4,
+      data$GarageQual == "Gd" ~ 5,
+      data$GarageQual == "Ex" ~ 6
+    ),
+    GarageCond = case_when(
+      data$GarageCond == "Nothing" ~ 1,
+      data$GarageCond == "Po" ~ 2,
+      data$GarageCond == "Fa" ~ 3,
+      data$GarageCond == "TA" ~ 4,
+      data$GarageCond == "Gd" ~ 5,
+      data$GarageCond == "Ex" ~ 6
+    ),
+    PoolQC = case_when(
+      data$PoolQC == "Nothing" ~ 1,
+      data$PoolQC == "Po" ~ 2,
+      data$PoolQC == "Fa" ~ 3,
+      data$PoolQC == "TA" ~ 4,
+      data$PoolQC == "Gd" ~ 5,
+      data$PoolQC == "Ex" ~ 6
+    ),
+  ) 
+
+```
 
 ## Just use Linear regression Model...
 ```{r}
 
-# data$GarageCond <- NULL
-# data$BsmtCond <- NULL
+
+data$GarageCond <- NULL
+data$BsmtCond <- NULL
 
 data$SalePrice <- log(data$SalePrice)
 
@@ -254,34 +378,18 @@ test_data <- data %>%
 train_data$set <- NULL
 test_data$set <- NULL
 
-dim(train_data)
-dim(test_data)
 
-
+## 리니어 모델 사용
 lm.fit <- lm(SalePrice ~., data = train_data)
+step.lm.fit <- stepAIC(lm.fit, direction = "both",trace = FALSE)
 
-step.lm.fit <- stepAIC(lm.fit, direction = "both")
-
-summary(step.lm.fit)
-
-
+## 프리딕트 및 submit.csv 파일 만들기
 test_data$SalePrice <- predict(step.lm.fit, test_data)
 submit <- data.frame(Id = test$Id, SalePrice = exp(test_data$SalePrice))
 
 write.csv(submit, "submit.csv", row.names = FALSE)
 
 ```
-
-
-
-```{r}
-
-```
-
-
-
-
-
 
 
 
