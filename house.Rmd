@@ -14,6 +14,7 @@ library(MASS)
 library(caret)
 library(e1071)
 library(gridExtra)
+library(psych)
 select <-dplyr::select
 ```
 
@@ -193,7 +194,6 @@ data$MiscFeature <- NULL
 
 # PoolQC 
 data$PoolQC <- not_function(data, "PoolQC")
-
 ```
 
 ## Price density
@@ -202,7 +202,7 @@ data$PoolQC <- not_function(data, "PoolQC")
 
 p1 <- data %>%
   filter(set == "train") %>%
-  ggplot(aes(SalePrice )) +
+  ggplot(aes(SalePrice)) +
   geom_density() + xlab("SalePrice") +
   ggtitle("Sale Price Density") + 
   theme_bw()
@@ -235,19 +235,43 @@ grid.arrange(p1,p2,p3,p4, nrow = 2)
 
 ## Data manipulation
 
-### change factor to integer
-
-```{r}
-data %>%
-  select_if(is.factor) %>%
-  colnames()
-```
-
+## 문자 -> 카테고리
 
 ```{r}
 data <- data %>%
   mutate_if(is.character, as.factor)
+```
 
+## Train 변수 비율 이상한 것들 제거하기 
+
+```{r}
+check_data <- data %>%
+  mutate_if(is.numeric, as.factor) %>%
+  select(-SalePrice)
+
+delete_col <- vector()
+all_colname <- colnames(check_data)
+
+j <- 1
+for (i in 1:ncol(check_data)){
+  if (sum(check_data[,i] == getmode(check_data[,i])) > 2770) {
+    delete_col[j] <- all_colname[i]
+    j <- j + 1
+  }
+}
+
+data <- data[,!colnames(data) %in% delete_col]
+
+
+data$PoolArea <- NULL
+data$PoolQC <- NULL
+data$GarageCond <- NULL
+data$BsmtCond <- NULL
+```
+
+### change factor to integer
+
+```{r}
 data <- data %>%
   mutate(
     LotShape = case_when(
@@ -282,14 +306,6 @@ data <- data %>%
       data$BsmtQual == "TA" ~ 4,
       data$BsmtQual == "Gd" ~ 5,
       data$BsmtQual == "Ex" ~ 6
-    ),
-    BsmtCond = case_when(
-      data$BsmtCond == "Nothing" ~ 1,
-      data$BsmtCond == "Po" ~ 2,
-      data$BsmtCond == "Fa" ~ 3,
-      data$BsmtCond == "TA" ~ 4,
-      data$BsmtCond == "Gd" ~ 5,
-      data$BsmtCond == "Ex" ~ 6
     ),
     BsmtExposure = case_when(
       data$BsmtExposure == "Nothing" ~ 1,
@@ -337,41 +353,46 @@ data <- data %>%
       data$GarageQual == "TA" ~ 4,
       data$GarageQual == "Gd" ~ 5,
       data$GarageQual == "Ex" ~ 6
-    ),
-    GarageCond = case_when(
-      data$GarageCond == "Nothing" ~ 1,
-      data$GarageCond == "Po" ~ 2,
-      data$GarageCond == "Fa" ~ 3,
-      data$GarageCond == "TA" ~ 4,
-      data$GarageCond == "Gd" ~ 5,
-      data$GarageCond == "Ex" ~ 6
-    ),
-    PoolQC = case_when(
-      data$PoolQC == "Nothing" ~ 1,
-      data$PoolQC == "Po" ~ 2,
-      data$PoolQC == "Fa" ~ 3,
-      data$PoolQC == "TA" ~ 4,
-      data$PoolQC == "Gd" ~ 5,
-      data$PoolQC == "Ex" ~ 6
-    ),
-  ) 
+    )
+  )
+
+```
+
+
+## Detection outlier
+
+```{r}
+
+train_out1 <- data %>%
+  filter(set == "train") %>%
+  select_if(is.numeric)
+
+train_out2 <- data %>%
+  filter(set == "train") %>%
+  select_if(is.factor)
+
+## tol=1e-20 붙여야 계산됨
+maha <- mahalanobis(train_out1,colMeans(train_out1), cov(train_out1, use = "pairwise.complete.obs"), tol=1e-21)
+cutoff <- qchisq(.999, ncol(train_out1))
+
+
+noout1 <- train_out1[maha < cutoff , ]
+noout2 <- train_out2[maha < cutoff , ]
+
+new_data <- rbind( cbind(noout1, noout2), data[data$set=="test",])
 
 ```
 
 ## Just use Linear regression Model...
 ```{r}
 
+new_data$SalePrice <- log(new_data$SalePrice)
 
-data$GarageCond <- NULL
-data$BsmtCond <- NULL
-
-data$SalePrice <- log(data$SalePrice)
-
-train_data <- data %>%
+train_data <- new_data %>%
   filter(set == "train") %>%
   select(-Id)
 
-test_data <- data %>%
+test_data <- new_data %>%
   filter(set == "test") %>%
   select(-Id)
 
