@@ -238,14 +238,18 @@ grid.arrange(p1,p2,p3,p4, nrow = 2)
 ## Just use Linear regression Model...
 ```{r}
 
-data$GarageCond <- NULL
-data$BsmtCond <- NULL
+# data$GarageCond <- NULL
+# data$BsmtCond <- NULL
+
+data$SalePrice <- log(data$SalePrice)
 
 train_data <- data %>%
-  filter(set == "train")
+  filter(set == "train") %>%
+  select(-Id)
 
 test_data <- data %>%
-  filter(set == "test")
+  filter(set == "test") %>%
+  select(-Id)
 
 train_data$set <- NULL
 test_data$set <- NULL
@@ -262,7 +266,7 @@ summary(step.lm.fit)
 
 
 test_data$SalePrice <- predict(step.lm.fit, test_data)
-submit <- data.frame(Id = test$Id, SalePrice = test_data$SalePrice)
+submit <- data.frame(Id = test$Id, SalePrice = exp(test_data$SalePrice))
 
 write.csv(submit, "submit.csv", row.names = FALSE)
 
@@ -270,7 +274,9 @@ write.csv(submit, "submit.csv", row.names = FALSE)
 
 
 
+```{r}
 
+```
 
 
 
