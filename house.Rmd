@@ -27,6 +27,7 @@ data <- dplyr::bind_rows(train,test)
 data$set <- as.factor(data$set)
 
 dim(data)
+
 ```
 
 ## Missing value check
@@ -52,8 +53,6 @@ missingValue %>%
 
 ```{r, warning=FALSE, message=FALSE}
 
-
-### 흑흑 너무 많다 ㅠㅠㅠ
 getmode <- function(v) {
    uniqv <- unique(v)
    uniqv[which.max(tabulate(match(v, uniqv)))]
@@ -358,10 +357,76 @@ data <- data %>%
 
 ```
 
+## Skewness check
+
+```{r}
+## skewness -2 < value < 2
+check_data <- data %>%
+  select_if(is.numeric) %>%
+  select(-SalePrice)
+
+delete_col <- vector()
+all_colname <- colnames(check_data)
+
+j <- 1
+for (i in 1:ncol(check_data)){
+  if (abs(skewness(check_data[,i])) > 2){
+    delete_col[j] <- all_colname[i]
+    j <- j + 1
+  }
+}
+
+data %>%
+  ggplot(aes((LotArea))) +
+  geom_density()
+
+data %>%
+  ggplot(aes(LandContour)) +
+  geom_density()
+
+data %>%
+  ggplot(aes(MasVnrArea)) +
+  geom_density()
+
+data %>%
+  ggplot(aes(log(BsmtFinType2))) +
+  geom_density()
+
+
+data %>%
+  ggplot(aes(BsmtFinSF2)) +
+  geom_density()
+
+data %>%
+  ggplot(aes(BsmtHalfBath)) +
+  geom_density()
+
+## 그냥 냅두자 얘는
+data %>%
+  ggplot(aes(GarageQual)) +
+  geom_density()
+
+data %>%
+  ggplot(aes(OpenPorchSF )) +
+  geom_density()
+
+data %>%
+  ggplot(aes(EnclosedPorch )) +
+  geom_density()
+
+## 0이 너무 많은 값들은 어쩔 수가 없음....
+
+
+data$LotArea <- log(data$LotArea)
+data$BsmtFinType2 <- log(data$BsmtFinType2)
+
+```
 
 ## Detection outlier
 
 ```{r}
+
+data$SalePrice <- log(data$SalePrice)
 
 train_out1 <- data %>%
   filter(set == "train") %>%
@@ -383,22 +448,20 @@ new_data <- rbind( cbind(noout1, noout2), data[data$set=="test",])
 
 ```
 
+
 ## Just use Linear regression Model...
 ```{r}
 
-new_data$SalePrice <- log(new_data$SalePrice)
-
 train_data <- new_data %>%
   filter(set == "train") %>%
-  select(-Id)
+  select(-Id,-Exterior1st, -Functional)
 
 test_data <- new_data %>%
   filter(set == "test") %>%
-  select(-Id)
+  select(-Id, -Exterior1st, -Functional)
 
 train_data$set <- NULL
 test_data$set <- NULL
-
 
 ## 리니어 모델 사용
 lm.fit <- lm(SalePrice ~., data = train_data)
@@ -406,17 +469,26 @@ step.lm.fit <- stepAIC(lm.fit, direction = "both",trace = FALSE)
 
 ## 프리딕트 및 submit.csv 파일 만들기
 test_data$SalePrice <- predict(step.lm.fit, test_data)
-submit <- data.frame(Id = test$Id, SalePrice = exp(test_data$SalePrice))
+# submit <- data.frame(Id = test$Id, SalePrice = exp(test_data$SalePrice))
 
-write.csv(submit, "submit.csv", row.names = FALSE)
+#write.csv(submit, "submit.csv", row.names = FALSE)
 
 ```
 
+## Use SVM Linear Version
 
+```{r}
+svm.fit.radial <- svm(SalePrice~ ., data = train_data, cost = 3)
 
+summary(svm.fit.radial)
 
+test_data$SalePrice <- predict(svm.fit.radial, test_data)
 
+# submit <- data.frame(Id = test$Id, SalePrice = exp(test_data$SalePrice))
+# 
+# write.csv(submit, "submit_svm.csv", row.names = FALSE)
 
+```
 
 
 
